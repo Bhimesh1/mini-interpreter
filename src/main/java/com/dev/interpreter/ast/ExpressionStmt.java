@@ -11,4 +11,9 @@ public class ExpressionStmt extends Stmt {
     public Expr getExpression() {
         return expression;
     }
+
+    @Override
+    public String toString() {
+        return expression.toString();
+    }
 }

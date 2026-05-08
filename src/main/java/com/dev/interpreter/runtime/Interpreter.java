@@ -46,6 +46,22 @@ public class Interpreter {
 
             return;
         }
+        if (stmt instanceof BlockStmt blockStmt) {
+
+            for (Stmt statement : blockStmt.getStatements()) {
+                execute(statement);
+            }
+
+            return;
+        }
+        if (stmt instanceof WhileStmt whileStmt) {
+
+            while (isTruthy(evaluate(whileStmt.getCondition()))) {
+                execute(whileStmt.getBody());
+            }
+
+            return;
+        }
 
         throw new RuntimeException("Unknown statement.");
     }

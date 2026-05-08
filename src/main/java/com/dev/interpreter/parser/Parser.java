@@ -36,28 +36,88 @@ public class Parser {
             return ifStatement();
         }
 
+        if (match(WHILE)) {
+            return whileStatement();
+        }
+
         if (check(IDENTIFIER) && checkNext(ASSIGN)) {
             return assignment();
         }
 
-        Expr expr = expression();
+        return new ExpressionStmt(expression());
+    }
 
-        return new ExpressionStmt(expr);
+    private Stmt block(Stmt first) {
+        List<Stmt> statements = new ArrayList<>();
+
+        statements.add(first);
+
+        while (match(COMMA)) {
+
+            if (match(IF)) {
+                statements.add(ifStatement());
+            }
+            else if (match(WHILE)) {
+                statements.add(whileStatement());
+            }
+            else if (check(IDENTIFIER) && checkNext(ASSIGN)) {
+                statements.add(assignment());
+            }
+            else {
+                statements.add(
+                        new ExpressionStmt(expression())
+                );
+            }
+        }
+
+        if (statements.size() == 1) {
+            return first;
+        }
+
+        return new BlockStmt(statements);
+    }
+
+    private Stmt whileStatement() {
+
+        Expr condition = expression();
+
+        consume(DO, "Expected 'do' after while condition.");
+
+        Stmt body = blockStatement();
+
+        return new WhileStmt(condition, body);
     }
 
     private Stmt ifStatement() {
+
         Expr condition = expression();
 
-        consume(THEN, "Expected 'then' after if condition.");
+        consume(THEN, "Expected 'then' after condition.");
 
         Stmt thenBranch = statement();
 
-        consume(ELSE, "Expected 'else' after then branch.");
+        consume(ELSE, "Expected 'else'.");
 
         Stmt elseBranch = statement();
 
         return new IfStmt(condition, thenBranch, elseBranch);
+    }
 
+    private Stmt blockStatement() {
+
+        List<Stmt> statements = new ArrayList<>();
+
+        statements.add(statement());
+
+        while (match(COMMA)) {
+            statements.add(statement());
+        }
+
+        if (statements.size() == 1) {
+            return statements.get(0);
+        }
+
+        return new BlockStmt(statements);
     }
 
     private Stmt assignment() {

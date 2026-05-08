@@ -60,4 +60,35 @@ class InterpreterTest {
         assertEquals(20, env.get("x"));
         assertEquals(100, env.get("y"));
     }
+
+    @Test
+    void testWhileLoop() {
+
+
+        String source = """
+            x = 0
+            y = 0
+            while x < 3 do if x == 1 then y = 10 else y = y + 1, x = x + 1
+            """;
+
+        Lexer lexer = new Lexer(source);
+
+        List<Token> tokens = lexer.tokenize();
+
+        Parser parser = new Parser(tokens);
+
+        List<Stmt> statements = parser.parse();
+
+        Interpreter interpreter = new Interpreter();
+
+
+        interpreter.execute(statements);
+
+        Environment env = interpreter.getEnvironment();
+
+        assertEquals(3, env.get("x"));
+        assertEquals(11, env.get("y"));
+
+
+    }
 }

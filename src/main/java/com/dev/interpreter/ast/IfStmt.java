@@ -22,4 +22,12 @@ public class IfStmt extends Stmt{
     public Stmt getElseBranch() {
         return elseBranch;
     }
+
+    @Override
+    public String toString() {
+        return "if (" + condition + ") then " +
+                thenBranch +
+                " else " +
+                elseBranch;
+    }
 }
