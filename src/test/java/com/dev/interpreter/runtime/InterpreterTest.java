@@ -91,4 +91,58 @@ class InterpreterTest {
 
 
     }
+
+    @Test
+    void testFunctionCall() {
+
+        String source = """
+            fun add(a, b) { return a + b }
+            four = add(2, 2)
+            """;
+
+        Lexer lexer = new Lexer(source);
+
+        List<Token> tokens = lexer.tokenize();
+
+        Parser parser = new Parser(tokens);
+
+        List<Stmt> statements = parser.parse();
+
+        Interpreter interpreter = new Interpreter();
+
+        interpreter.execute(statements);
+
+        Environment env = interpreter.getEnvironment();
+
+        assertEquals(4, env.get("four"));
+    }
+
+    @Test
+    void testRecursiveFactorial() {
+
+        String source = """
+            fun fact_rec(n) {
+                if n <= 0 then return 1
+                else return n * fact_rec(n - 1)
+            }
+
+            a = fact_rec(5)
+            """;
+
+        Lexer lexer = new Lexer(source);
+
+        List<Token> tokens = lexer.tokenize();
+
+        Parser parser = new Parser(tokens);
+
+        List<Stmt> statements = parser.parse();
+
+        Interpreter interpreter = new Interpreter();
+
+        interpreter.execute(statements);
+
+        Environment env = interpreter.getEnvironment();
+
+        assertEquals(120, env.get("a"));
+    }
 }

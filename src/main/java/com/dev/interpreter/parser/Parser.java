@@ -32,6 +32,14 @@ public class Parser {
 
     private Stmt statement() {
 
+        if (match(FUN)) {
+            return functionDeclaration();
+        }
+
+        if (match(RETURN)) {
+            return returnStatement();
+        }
+
         if (match(IF)) {
             return ifStatement();
         }
@@ -47,35 +55,53 @@ public class Parser {
         return new ExpressionStmt(expression());
     }
 
-    private Stmt block(Stmt first) {
-        List<Stmt> statements = new ArrayList<>();
+    private Stmt returnStatement() {
 
-        statements.add(first);
+        Expr value = expression();
 
-        while (match(COMMA)) {
-
-            if (match(IF)) {
-                statements.add(ifStatement());
-            }
-            else if (match(WHILE)) {
-                statements.add(whileStatement());
-            }
-            else if (check(IDENTIFIER) && checkNext(ASSIGN)) {
-                statements.add(assignment());
-            }
-            else {
-                statements.add(
-                        new ExpressionStmt(expression())
-                );
-            }
-        }
-
-        if (statements.size() == 1) {
-            return first;
-        }
-
-        return new BlockStmt(statements);
+        return new ReturnStmt(value);
     }
+
+    private Stmt functionDeclaration() {
+
+        Token name = consume(
+                IDENTIFIER,
+                "Expected function name."
+        );
+
+        consume(LPAREN, "Expected '(' after function name.");
+
+        List<String> parameters = new ArrayList<>();
+
+        if (!check(RPAREN)) {
+
+            do {
+
+                Token parameter = consume(
+                        IDENTIFIER,
+                        "Expected parameter name."
+                );
+
+                parameters.add(parameter.getLexeme());
+
+            } while (match(COMMA));
+        }
+
+        consume(RPAREN, "Expected ')' after parameters.");
+
+        consume(LBRACE, "Expected '{' before function body.");
+
+        Stmt body = blockStatement();
+
+
+        return new FunctionStmt(
+                name.getLexeme(),
+                parameters,
+                body
+        );
+    }
+
+
 
     private Stmt whileStatement() {
 
@@ -83,7 +109,21 @@ public class Parser {
 
         consume(DO, "Expected 'do' after while condition.");
 
-        Stmt body = blockStatement();
+        List<Stmt> statements = new ArrayList<>();
+
+        statements.add(statement());
+
+        while (match(COMMA)) {
+            statements.add(statement());
+        }
+
+        Stmt body;
+
+        if (statements.size() == 1) {
+            body = statements.get(0);
+        } else {
+            body = new BlockStmt(statements);
+        }
 
         return new WhileStmt(condition, body);
     }
@@ -100,18 +140,25 @@ public class Parser {
 
         Stmt elseBranch = statement();
 
-        return new IfStmt(condition, thenBranch, elseBranch);
+        return new IfStmt(
+                condition,
+                thenBranch,
+                elseBranch
+        );
     }
 
     private Stmt blockStatement() {
 
         List<Stmt> statements = new ArrayList<>();
 
-        statements.add(statement());
+        while (!check(RBRACE) && !isAtEnd()) {
 
-        while (match(COMMA)) {
             statements.add(statement());
+
+            match(COMMA);
         }
+
+        consume(RBRACE, "Expected '}' after block.");
 
         if (statements.size() == 1) {
             return statements.get(0);
@@ -190,15 +237,49 @@ public class Parser {
 
     private Expr factor() {
 
-        Expr expr = primary();
+        Expr expr = call();
 
         while (match(STAR, SLASH)) {
 
             Token operator = previous();
 
-            Expr right = primary();
+            Expr right = call();
 
-            expr = new BinaryExpr(expr, operator, right);
+            expr = new BinaryExpr(
+                    expr,
+                    operator,
+                    right
+            );
+        }
+
+        return expr;
+    }
+
+    private Expr call() {
+
+        Expr expr = primary();
+
+        while (true) {
+
+            if (match(LPAREN)) {
+
+                List<Expr> arguments = new ArrayList<>();
+
+                if (!check(RPAREN)) {
+
+                    do {
+                        arguments.add(expression());
+                    }
+                    while (match(COMMA));
+                }
+
+                consume(RPAREN, "Expected ')' after arguments.");
+
+                expr = new CallExpr(expr, arguments);
+
+            } else {
+                break;
+            }
         }
 
         return expr;

@@ -26,4 +26,24 @@ class ParserTest {
 
         System.out.println(statements.get(0));
     }
+
+    @Test
+    void testFunctionDeclaration() {
+
+        String source = """
+            fun add(a, b) { return a + b }
+            """;
+
+        Lexer lexer = new Lexer(source);
+
+        List<Token> tokens = lexer.tokenize();
+
+        Parser parser = new Parser(tokens);
+
+        List<Stmt> statements = parser.parse();
+
+        assertEquals(1, statements.size());
+
+        System.out.println(statements.get(0));
+    }
 }
