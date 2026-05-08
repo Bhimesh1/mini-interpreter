@@ -34,7 +34,32 @@ public class Interpreter {
             return;
         }
 
+        if (stmt instanceof IfStmt ifStmt) {
+
+            Object condition = evaluate(ifStmt.getCondition());
+
+            if (isTruthy(condition)) {
+                execute(ifStmt.getThenBranch());
+            } else {
+                execute(ifStmt.getElseBranch());
+            }
+
+            return;
+        }
+
         throw new RuntimeException("Unknown statement.");
+    }
+
+    private boolean isTruthy(Object value) {
+        if (value instanceof Boolean bool) {
+            return bool;
+        }
+
+        if (value instanceof Integer integer) {
+            return integer != 0;
+        }
+
+        return value != null;
     }
 
     private Object evaluate(Expr expr) {

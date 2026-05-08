@@ -32,6 +32,10 @@ public class Parser {
 
     private Stmt statement() {
 
+        if (match(IF)) {
+            return ifStatement();
+        }
+
         if (check(IDENTIFIER) && checkNext(ASSIGN)) {
             return assignment();
         }
@@ -39,6 +43,21 @@ public class Parser {
         Expr expr = expression();
 
         return new ExpressionStmt(expr);
+    }
+
+    private Stmt ifStatement() {
+        Expr condition = expression();
+
+        consume(THEN, "Expected 'then' after if condition.");
+
+        Stmt thenBranch = statement();
+
+        consume(ELSE, "Expected 'else' after then branch.");
+
+        Stmt elseBranch = statement();
+
+        return new IfStmt(condition, thenBranch, elseBranch);
+
     }
 
     private Stmt assignment() {

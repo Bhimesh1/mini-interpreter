@@ -1,29 +1,29 @@
 package com.dev.interpreter.parser;
 
-import com.dev.interpreter.ast.Expr;
+import com.dev.interpreter.ast.Stmt;
 import com.dev.interpreter.lexer.Lexer;
 import com.dev.interpreter.lexer.Token;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ParserTest {
 
     @Test
-    void testSimpleExpression() {
+    void testAssignmentStatement() {
 
-        Lexer lexer = new Lexer("2 + 3 * 4");
+        Lexer lexer = new Lexer("x = 2 + 3 * 4");
 
         List<Token> tokens = lexer.tokenize();
 
         Parser parser = new Parser(tokens);
 
-        Expr expr = parser.parse();
+        List<Stmt> statements = parser.parse();
 
-        assertNotNull(expr);
+        assertEquals(1, statements.size());
 
-        System.out.println(expr);
+        System.out.println(statements.get(0));
     }
 }

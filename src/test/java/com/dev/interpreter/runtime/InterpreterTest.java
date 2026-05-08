@@ -37,4 +37,27 @@ class InterpreterTest {
         assertEquals(2, env.get("x"));
         assertEquals(5, env.get("y"));
     }
+
+    @Test
+    void testIfStatement() {
+
+        String source = """
+            x = 20
+            if x > 10 then y = 100 else y = 0
+            """;
+
+        Lexer lexer = new Lexer(source);
+        List<Token> tokens = lexer.tokenize();
+
+        Parser parser = new Parser(tokens);
+        List<Stmt> statements = parser.parse();
+
+        Interpreter interpreter = new Interpreter();
+        interpreter.execute(statements);
+
+        Environment env = interpreter.getEnvironment();
+
+        assertEquals(20, env.get("x"));
+        assertEquals(100, env.get("y"));
+    }
 }
