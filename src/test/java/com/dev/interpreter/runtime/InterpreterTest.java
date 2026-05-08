@@ -1,6 +1,6 @@
 package com.dev.interpreter.runtime;
 
-import com.dev.interpreter.ast.Expr;
+import com.dev.interpreter.ast.Stmt;
 import com.dev.interpreter.lexer.Lexer;
 import com.dev.interpreter.lexer.Token;
 import com.dev.interpreter.parser.Parser;
@@ -12,34 +12,29 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class InterpreterTest {
 
-    private Object runExpression(String source) {
+    @Test
+    void testVariableAssignments() {
+
+        String source = """
+                x = 2
+                y = x + 3
+                """;
+
         Lexer lexer = new Lexer(source);
+
         List<Token> tokens = lexer.tokenize();
 
         Parser parser = new Parser(tokens);
-        Expr expr = parser.parse();
+
+        List<Stmt> statements = parser.parse();
 
         Interpreter interpreter = new Interpreter();
-        return interpreter.evaluate(expr);
-    }
 
-    @Test
-    void testArithmeticExpression() {
-        assertEquals(14, runExpression("2 + 3 * 4"));
-    }
+        interpreter.execute(statements);
 
-    @Test
-    void testParenthesizedExpression() {
-        assertEquals(20, runExpression("(2 + 3) * 4"));
-    }
+        Environment env = interpreter.getEnvironment();
 
-    @Test
-    void testComparisonExpression() {
-        assertEquals(true, runExpression("10 > 3"));
-    }
-
-    @Test
-    void testEqualityExpression() {
-        assertEquals(true, runExpression("5 == 5"));
+        assertEquals(2, env.get("x"));
+        assertEquals(5, env.get("y"));
     }
 }

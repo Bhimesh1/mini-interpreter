@@ -3,9 +3,41 @@ package com.dev.interpreter.runtime;
 import com.dev.interpreter.ast.*;
 import com.dev.interpreter.lexer.TokenType;
 
+import java.util.List;
+
 public class Interpreter {
 
-    public Object evaluate(Expr expr) {
+    private final Environment environment = new Environment();
+
+    public void execute(List<Stmt> statements) {
+
+        for (Stmt stmt : statements) {
+            execute(stmt);
+        }
+    }
+
+    private void execute(Stmt stmt) {
+
+        if (stmt instanceof AssignStmt assignStmt) {
+
+            Object value = evaluate(assignStmt.getValue());
+
+            environment.define(assignStmt.getName(), value);
+
+            return;
+        }
+
+        if (stmt instanceof ExpressionStmt expressionStmt) {
+
+            evaluate(expressionStmt.getExpression());
+
+            return;
+        }
+
+        throw new RuntimeException("Unknown statement.");
+    }
+
+    private Object evaluate(Expr expr) {
 
         if (expr instanceof LiteralExpr literalExpr) {
             return literalExpr.getValue();
@@ -15,15 +47,15 @@ public class Interpreter {
             return evaluate(groupingExpr.getExpression());
         }
 
+        if (expr instanceof VariableExpr variableExpr) {
+            return environment.get(variableExpr.getName());
+        }
+
         if (expr instanceof BinaryExpr binaryExpr) {
             return evaluateBinary(binaryExpr);
         }
 
-        if (expr instanceof VariableExpr variableExpr) {
-            throw new RuntimeException("Undefined variable: " + variableExpr.getName());
-        }
-
-        throw new RuntimeException("Unknown expression type.");
+        throw new RuntimeException("Unknown expression.");
     }
 
     private Object evaluateBinary(BinaryExpr expr) {
@@ -48,7 +80,7 @@ public class Interpreter {
             case EQUAL_EQUAL -> left.equals(right);
             case BANG_EQUAL -> !left.equals(right);
 
-            default -> throw new RuntimeException("Unsupported binary operator: " + operator);
+            default -> throw new RuntimeException("Unsupported operator.");
         };
     }
 
@@ -58,6 +90,10 @@ public class Interpreter {
             return integer;
         }
 
-        throw new RuntimeException("Expected integer but got: " + value);
+        throw new RuntimeException("Expected integer.");
+    }
+
+    public Environment getEnvironment() {
+        return environment;
     }
 }

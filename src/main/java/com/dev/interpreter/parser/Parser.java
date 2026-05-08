@@ -4,6 +4,7 @@ import com.dev.interpreter.ast.*;
 import com.dev.interpreter.lexer.Token;
 import com.dev.interpreter.lexer.TokenType;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.dev.interpreter.lexer.TokenType.*;
@@ -18,8 +19,37 @@ public class Parser {
         this.tokens = tokens;
     }
 
-    public Expr parse() {
-        return expression();
+    public List<Stmt> parse() {
+
+        List<Stmt> statements = new ArrayList<>();
+
+        while (!isAtEnd()) {
+            statements.add(statement());
+        }
+
+        return statements;
+    }
+
+    private Stmt statement() {
+
+        if (check(IDENTIFIER) && checkNext(ASSIGN)) {
+            return assignment();
+        }
+
+        Expr expr = expression();
+
+        return new ExpressionStmt(expr);
+    }
+
+    private Stmt assignment() {
+
+        Token name = consume(IDENTIFIER, "Expected variable name.");
+
+        consume(ASSIGN, "Expected '='.");
+
+        Expr value = expression();
+
+        return new AssignStmt(name.getLexeme(), value);
     }
 
     private Expr expression() {
@@ -119,12 +149,21 @@ public class Parser {
 
             Expr expr = expression();
 
-            consume(RPAREN, "Expected ')' after expression.");
+            consume(RPAREN, "Expected ')'.");
 
             return new GroupingExpr(expr);
         }
 
         throw error("Expected expression.");
+    }
+
+    private boolean checkNext(TokenType type) {
+
+        if (current + 1 >= tokens.size()) {
+            return false;
+        }
+
+        return tokens.get(current + 1).getType() == type;
     }
 
     private boolean match(TokenType... types) {
